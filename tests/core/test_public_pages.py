@@ -1,4 +1,3 @@
-import asyncio
 import json
 
 import pytest
@@ -51,19 +50,22 @@ def test_defaults_without_env(monkeypatch):
     assert "mailto:" not in page
 
 
-def test_root_serves_html_to_browsers():
-    response = asyncio.run(home_page(_request("/", "text/html,application/xhtml+xml")))
+@pytest.mark.asyncio
+async def test_root_serves_html_to_browsers():
+    response = await home_page(_request("/", "text/html,application/xhtml+xml"))
     assert response.media_type == "text/html"
     assert b"Private MCP" in response.body
 
 
-def test_root_keeps_json_health_for_api_clients():
-    response = asyncio.run(home_page(_request("/")))
+@pytest.mark.asyncio
+async def test_root_keeps_json_health_for_api_clients():
+    response = await home_page(_request("/"))
     assert json.loads(response.body)["status"] == "healthy"
 
 
-def test_privacy_and_terms_routes():
-    privacy = asyncio.run(privacy_page(_request("/privacy")))
-    terms = asyncio.run(terms_page(_request("/terms")))
+@pytest.mark.asyncio
+async def test_privacy_and_terms_routes():
+    privacy = await privacy_page(_request("/privacy"))
+    terms = await terms_page(_request("/terms"))
     assert b"Privacy Policy" in privacy.body
     assert b"Terms of Service" in terms.body
