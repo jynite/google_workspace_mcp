@@ -33,6 +33,7 @@ def test_privacy_page_has_limited_use_disclosure_and_contact():
     assert "Limited Use" in page
     assert "mailto:owner@example.com" in page
     assert "September 30, 2026" in page
+    assert "https://www.googleapis.com/auth/gmail.readonly" in page
 
 
 def test_brand_name_is_escaped(monkeypatch):
@@ -58,8 +59,16 @@ async def test_root_serves_html_to_browsers():
 
 
 @pytest.mark.asyncio
-async def test_root_keeps_json_health_for_api_clients():
-    response = await home_page(_request("/"))
+@pytest.mark.parametrize("accept", ["", "*/*"])
+async def test_root_serves_html_to_generic_clients(accept):
+    # Google's verification checker does not always send Accept: text/html.
+    response = await home_page(_request("/", accept))
+    assert response.media_type == "text/html"
+
+
+@pytest.mark.asyncio
+async def test_root_keeps_json_health_for_json_clients():
+    response = await home_page(_request("/", "application/json"))
     assert json.loads(response.body)["status"] == "healthy"
 
 

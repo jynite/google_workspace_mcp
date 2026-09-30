@@ -17,7 +17,7 @@ import html
 import os
 from datetime import date
 
-from auth.scopes import SCOPES
+from auth.scopes import get_current_scopes
 
 DEFAULT_BRAND_NAME = "Google Workspace MCP"
 POLICY_LAST_UPDATED = date(2026, 9, 30)
@@ -48,12 +48,19 @@ def _contact_email() -> str:
 
 def _requested_products() -> list[tuple[str, str]]:
     """Return (product, purpose) rows for the scopes this server requests."""
-    joined = " ".join(SCOPES)
+    joined = " ".join(get_current_scopes())
     return [
         (product, purpose)
         for product, needle, purpose in _SCOPE_PURPOSES
         if f"/auth/{needle}" in joined
     ]
+
+
+def _scope_list_html() -> str:
+    return "".join(
+        f"<li><code>{html.escape(scope)}</code></li>"
+        for scope in sorted(set(get_current_scopes()))
+    )
 
 
 def _contact_html() -> str:
@@ -148,16 +155,48 @@ def render_privacy_page() -> str:
     body = f"""
 <h1>Privacy Policy</h1>
 <p class="muted">Last updated: {updated}</p>
-<p>This policy explains how {name} ("the app") handles information, including
-data received from Google APIs.</p>
+<p>This policy explains what data {name} ("the app") collects, how it is used,
+stored, and shared, and how you can have it deleted, including data received from
+Google APIs.</p>
+
+<h2>Who operates the app</h2>
+<p>{name} is a privately operated Model Context Protocol (MCP) server hosted at
+this domain. It connects an AI assistant that you choose (such as Claude) to your
+Google Workspace account. Contact: {_contact_html()}.</p>
 
 <h2>1. Data the app accesses</h2>
-<p>After you sign in with Google and grant permission, the app can access the
-Google Workspace data covered by the permissions you approved: Gmail messages and
-settings, Google Drive files, Docs, Sheets, Calendar events, Tasks, Apps Script
-projects, and your basic Google account profile (name and email address). The app
-only reads or changes this data when your AI assistant makes a request on your
-behalf.</p>
+<p>The app only accesses Google data after you sign in with Google and approve the
+requested permissions, and only reads or changes that data when your AI assistant
+makes a request on your behalf. Depending on what you ask for, that includes:</p>
+<table>
+  <tr><th>Source</th><th>Data</th><th>Why</th></tr>
+  <tr><td>Google account</td><td>Name, email address, profile picture URL,
+      Google account ID</td><td>Identify which account is signed in and keep its
+      tokens separate from other accounts.</td></tr>
+  <tr><td>Gmail</td><td>Message headers, bodies, attachments, labels, drafts,
+      filters, vacation/auto-reply settings</td><td>Search and read the messages you
+      ask about, draft and send email you request, and manage labels and filters you
+      ask to change.</td></tr>
+  <tr><td>Google Drive</td><td>File names, metadata, contents, folders, sharing
+      permissions</td><td>Find, read, create, update, or share the files you
+      name.</td></tr>
+  <tr><td>Docs, Sheets</td><td>Document and spreadsheet contents and
+      comments</td><td>Read and edit the documents and spreadsheets you
+      request.</td></tr>
+  <tr><td>Calendar</td><td>Calendars, events, attendees, free/busy
+      information</td><td>Show your schedule and create or update the events you
+      request.</td></tr>
+  <tr><td>Tasks</td><td>Task lists and tasks</td><td>Read and manage the tasks you
+      request.</td></tr>
+  <tr><td>Apps Script</td><td>Script projects, code, deployments, run
+      metrics</td><td>Read, edit, deploy, or run the scripts you request.</td></tr>
+</table>
+<p>The exact permissions (OAuth scopes) the app requests are:</p>
+<ul>{_scope_list_html()}</ul>
+<p>The app does not collect data from any source other than Google APIs and the
+requests your AI assistant sends. It does not use cookies for tracking or
+analytics; the only cookies it sets are short-lived security cookies used during
+sign-in.</p>
 
 <h2>2. How the app uses Google user data</h2>
 <p>Google user data is used only to provide the features you request through your

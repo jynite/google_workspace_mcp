@@ -823,11 +823,13 @@ def close_auth_provider() -> None:
 
 @server.custom_route("/", methods=["GET"])
 async def home_page(request: Request):
-    # Browsers get the public app page Google's brand verification reviews;
-    # API clients and probes keep getting the JSON health payload.
-    if "text/html" in request.headers.get("accept", ""):
-        return HTMLResponse(render_home_page())
-    return await health_check(request)
+    # Serve the public app page Google's brand verification reviews. Its
+    # checker does not always send Accept: text/html, so only clients that
+    # explicitly ask for JSON get the health payload (probes use /health).
+    accept = request.headers.get("accept", "")
+    if "application/json" in accept and "text/html" not in accept:
+        return await health_check(request)
+    return HTMLResponse(render_home_page())
 
 
 @server.custom_route("/privacy", methods=["GET"])
