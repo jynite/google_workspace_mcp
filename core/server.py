@@ -32,6 +32,11 @@ from auth.oauth_responses import (
     create_server_error_response,
 )
 from auth.scopes import PROTOCOL_AUTH_SCOPES, SCOPES, get_current_scopes  # noqa
+from core.public_pages import (
+    render_home_page,
+    render_privacy_page,
+    render_terms_page,
+)
 from core.config import (
     USER_GOOGLE_EMAIL,
     get_transport_mode,
@@ -817,6 +822,24 @@ def close_auth_provider() -> None:
 
 
 @server.custom_route("/", methods=["GET"])
+async def home_page(request: Request):
+    # Browsers get the public app page Google's brand verification reviews;
+    # API clients and probes keep getting the JSON health payload.
+    if "text/html" in request.headers.get("accept", ""):
+        return HTMLResponse(render_home_page())
+    return await health_check(request)
+
+
+@server.custom_route("/privacy", methods=["GET"])
+async def privacy_page(request: Request):
+    return HTMLResponse(render_privacy_page())
+
+
+@server.custom_route("/terms", methods=["GET"])
+async def terms_page(request: Request):
+    return HTMLResponse(render_terms_page())
+
+
 @server.custom_route("/health", methods=["GET"])
 async def health_check(request: Request):
     try:
