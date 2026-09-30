@@ -32,6 +32,7 @@ def test_privacy_page_has_limited_use_disclosure_and_contact():
     assert "api-services-user-data-policy" in page
     assert "Limited Use" in page
     assert "mailto:owner@example.com" in page
+    assert "<!--email_off-->" in page
     assert "September 30, 2026" in page
     assert "https://www.googleapis.com/auth/gmail.readonly" in page
 

@@ -68,7 +68,9 @@ def _contact_html() -> str:
     if not email:
         return "the operator of this deployment"
     safe = html.escape(email)
-    return f'<a href="mailto:{safe}">{safe}</a>'
+    # email_off stops Cloudflare Email Obfuscation from replacing the address
+    # with "[email protected]" for reviewers and crawlers that don't run JS.
+    return f'<!--email_off--><a href="mailto:{safe}">{safe}</a><!--/email_off-->'
 
 
 def _page(title: str, body: str) -> str:
